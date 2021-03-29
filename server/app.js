@@ -9,6 +9,11 @@ const indexRouter = require('./routes/index')
 const usersRouter = require('./routes/users')
 const buildingRouter = require('./routes/building')
 const houseRouter = require('./routes/house')
+const parkingRouter = require('./routes/parking')
+const payTypeRouter = require('./routes/payType')
+const payManageRouter = require('./routes/payManage')
+const bulletinRouter = require('./routes/bulletin')
+const serviceRouter = require('./routes/service')
 
 const app = express()
 
@@ -27,6 +32,11 @@ app.use('/', indexRouter)
 app.use('/user', usersRouter)
 app.use('/building', buildingRouter)
 app.use('/house', houseRouter)
+app.use('/parking', parkingRouter)
+app.use('/payType', payTypeRouter)
+app.use('/payManage', payManageRouter)
+app.use('/bulletin', bulletinRouter)
+app.use('/service', serviceRouter)
 sequelize.sync().then(() => {
   console.log('Connection has been established successfully.')
 }).catch(err => {

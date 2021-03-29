@@ -85,10 +85,13 @@ module.exports = {
   },
   async getUsersAll(req, res) {
     try {
-      const {  page=1, limit, sex, identity, account, name } = req.body
+      const {  page=1, limit, sex, identity, account, name, id } = req.body
       const whereOpt = {}
       if (sex) {
         whereOpt['sex'] = sex
+      }
+      if (id) {
+        whereOpt['id'] = id
       }
       if (identity) {
         whereOpt['identity'] = identity
@@ -100,7 +103,7 @@ module.exports = {
       }
       if (name) {
         whereOpt['name'] = {
-          [Op.like]: '%'+account+'%'
+          [Op.like]: '%'+name+'%'
         }
       }
       const user = await User.findAndCountAll({
@@ -200,7 +203,7 @@ module.exports = {
                 name: 'Layout',
                 component: 'layout/index',
                 children: [{
-                  path: '/home',
+                  path: '/admin/home',
                   name: '首页',
                   component: "admin/home/home"
                 }, {
@@ -240,13 +243,15 @@ module.exports = {
                       component: "admin/community/bulletin"
                     }, {
                       path: '/service',
-                      name: '维修管理',
+                      name: '维修/投诉管理',
                       component: "admin/community/service"
-                    }, {
-                      path: '/complaint',
-                      name: '投诉管理',
-                      component: "admin/community/complaint"
-                    }]
+                    },
+                    // {
+                    //   path: '/complaint',
+                    //   name: '投诉管理',
+                    //   component: "admin/community/complaint"
+                    // }
+                  ]
                   }, {
                     path: '/userSys',
                     name: '用户系统',
@@ -273,7 +278,7 @@ module.exports = {
                 name: 'Layout',
                 component: 'layout/index',
                 children: [{
-                  path: '/home',
+                  path: '/owner/home',
                   name: '首页',
                   component: "owner/home"
                 }, {
@@ -281,14 +286,16 @@ module.exports = {
                   name: '查看公告',
                   component: "owner/bulletin"
                 }, {
-                  path: '/complaint',
-                  name: '我的投诉',
-                  component: "owner/complaint"
-                }, {
                   path: '/service',
-                  name: '我的报修',
+                  name: '我的投诉/报修',
                   component: "owner/service"
-                }, {
+                }, 
+                // {
+                //   path: '/service',
+                //   name: '我的报修',
+                //   component: "owner/service"
+                // }, 
+                {
                   path: '/payment',
                   name: '我的账单',
                   component: "owner/payment"
@@ -312,5 +319,27 @@ module.exports = {
         error: '登录信息错误'
       })
     }
-  }
+  },
+  async comparePwd(req, res) {
+    try {
+      const pwd = await User.findByPk(req.query.id)
+      if (pwd.password == req.body.oldPwd) {
+        res.send({
+          code: 200,
+          result: 1 //相同
+        })
+      } else {
+        res.send({
+          code: 200,
+          result: 2 //相同
+        })
+      }
+    } catch (error) {
+      console.log(error)
+      res.status(500).send({
+        code: 500,
+        error: '数据查询失败'
+      })
+    }
+  },
 }

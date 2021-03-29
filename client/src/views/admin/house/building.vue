@@ -139,6 +139,7 @@ export default {
       console.log(item)
     },
     handleSearch() {
+      this.page = 1
      if (this.searchBuilding == '') {
       this._getBuilding(this.searchBuilding,1,this.limit)
      } else {

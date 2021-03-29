@@ -62,13 +62,19 @@ module.exports = {
   },
   async getHouse(req, res) {
     try {
-      const { state, page=1, limit=10 } = req.body
+      const whereOpt = {}
+      const { state, page=1, limit=10, belongUser } = req.body
+      if (state) {
+        whereOpt['state'] = state
+      }
+      if (belongUser) {
+        whereOpt['belongUser'] = belongUser
+      }
       const house = await House.findAndCountAll({
-        where: {
-           state
-        },
+        where: whereOpt,
         include: [{
-          model: User
+          model: User,
+          attributes: ['account']
         }],
         raw: true, //开始原生查询
         offset: (page - 1)*limit,
@@ -88,32 +94,6 @@ module.exports = {
     } catch (error) {
       console.log(error)
       res.status(500).send({
-        code: 500,
-        error: '数据查询失败'
-      })
-    }
-  },
-  async getHouseAll(req, res) {
-    try {
-      const house = await House.findAll({
-        include: [{
-          model: User
-        }],
-      })
-      if (house) {
-        res.send({
-          code: 200,
-          house
-        })
-      } else {
-        res.send({
-          code: 502,
-          error: '没有找到对应的数据'
-        })
-      }
-    } catch (error) {
-      console.log(error)
-      res.send({
         code: 500,
         error: '数据查询失败'
       })

@@ -8,7 +8,7 @@ const req = axios.create({
 //拦截器
 const token = store.state.token
 req.interceptors.request.use(config => {
-    config.headers.Authorization = token 
+    config.headers.Authorization = `Bearer ${token}`  //必须加上Bearer
     return config
 })
 req.interceptors.response.use(res => {

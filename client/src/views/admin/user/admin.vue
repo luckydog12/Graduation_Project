@@ -226,9 +226,10 @@ export default {
             //编辑操作
             updateUser({
               account: this.userFormDialog.account,
-              identity: this.userFormDialog.identity,
+              identity: (this.userFormDialog.identity === '管理员' || this.userFormDialog.identity === '1') ? 1 : 2,
               name: this.userFormDialog.name,
-              sex: this.userFormDialog.sex === '-' ? null : this.userFormDialog.sex,
+              sex: this.userFormDialog.sex === '-' ? null : 
+                (this.userFormDialog.sex === '男' || this.userFormDialog.sex === '1') ? 1 : 2,
               phoneNumber: this.userFormDialog.phoneNumber,
               age: this.userFormDialog.age
             }, this.userId)
@@ -284,10 +285,21 @@ export default {
       console.log(item)
     },
     handleSearch() {
+      this.page = 1
       this._getUsersAll(this.searchForm.account,this.searchForm.nickName,
         this.searchForm.sex,this.searchForm.identity,1,9999)
     },
     handleAdd() {
+      this.password = true
+      this.userFormDialog = {
+        account: '',
+        password: '123456',
+        identity: '',
+        sex: null,
+        name: '',
+        phoneNumber: '',
+        age: null
+      },
       this.handleAddDialog = true
       this.handeleLogo = 1
     },
@@ -297,6 +309,7 @@ export default {
       this.handleAddDialog = true
       this.password = false
       this.userFormDialog = data
+
     },
     handleDelete(index, data) {
       console.log(index, data)
@@ -304,6 +317,9 @@ export default {
       deleteUser({id})
       .then(res => {
         if (res.data.code === 200) {
+          if (this.userData.length === 1) {
+            this.page -=1
+          }
           this._getUsersAll(this.searchForm.account,this.searchForm.nickName,
             this.searchForm.sex, this.searchForm.identity,this.page,this.limit)
           this._getUserAccountName()

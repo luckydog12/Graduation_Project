@@ -32,6 +32,14 @@ export const getUsersAll = (data) => {
   })
 }
 
+export const comparePwd = (data, id) => {
+  return req.request({
+    url: `/user/comparePwd?id=${id}`,
+    method: 'post',
+    data
+  })
+}
+
 export const updateUser = (data, id) => {
   return req.request({
     url: `/user/update?id=${id}`,

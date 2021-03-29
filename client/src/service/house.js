@@ -32,9 +32,3 @@ export const getHouse = (data) => {
   })
 }
 
-export const getHouseAll = () => {
-  return req.request({
-    url: '/house/getHouseAll',
-    method: 'get'
-  })
-}

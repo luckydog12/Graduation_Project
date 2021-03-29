@@ -14,7 +14,7 @@ function tokenVerify(token) {
 module.exports = {
     isValidToken(req, res, next) {
         let bearerToken = req.headers.authorization
-        console.log('###########',bearerToken)
+        // console.log('###########',bearerToken)
         try {
             let token = bearerToken.split(' ')[1]
             // token = token.slice(0, -5)

@@ -9,31 +9,15 @@
       >
         <el-row :gutter="20">
           <el-col :span="10">
-            <div class="avatar">
-              <!-- <img :src="personalInfo.circleUrl" alt="加载失败"> -->
-              <img src="@/image/user/girl.jpg" alt="加载失败">
-            </div>
-          </el-col>
-          <el-col :span="10">
-            <el-form-item label="账号 :" prop="account">
-              <el-input v-model="personalInfo.account" :disabled="disabled"></el-input>
-            </el-form-item>
-          </el-col>
-          <el-col :span="10">
-            <el-form-item label="密码 :" prop="password">
-              <el-input v-model="personalInfo.password" :disabled="disabled"></el-input>
-            </el-form-item>
-          </el-col>
-          <el-col :span="10">
-            <el-form-item label="姓名 :" prop="nickName">
-              <el-input v-model="personalInfo.nickName" placeholder="请输入修改后的姓名" :disabled="disabled"></el-input>
+            <el-form-item label="姓名 :">
+              <el-input v-model="personalInfo.name" placeholder="请输入姓名" :disabled="disabled"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="10">
             <el-form-item label="性别 :" prop="sex">
               <el-radio-group :disabled="disabled" v-model="personalInfo.sex">
-                <el-radio label="男"></el-radio>
-                <el-radio label="女"></el-radio>
+                <el-radio label="1">男</el-radio>
+                <el-radio label="2">女</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -49,27 +33,12 @@
           </el-col>
           <el-col :span="10">
             <el-form-item label="隶属车位 :" prop="parking">
-              <el-input v-model="personalInfo.parking" placeholder="请输入修改后的车位" :disabled="disabled"></el-input>
+              <el-input v-model="personalInfo.parking" disabled></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="10">
             <el-form-item label="隶属房屋 :" prop="house">
-              <!-- <el-input v-model="personalInfo.house" placeholder="请输入修改后的房屋信息" :disabled="disabled"></el-input> -->
-              <el-cascader 
-                placeholder="请选择隶属房屋" 
-                v-model="personalInfo.house"
-                :options="optionsHouse" 
-                filterable 
-                clearable 
-                :disabled="disabled">
-              </el-cascader>
-            </el-form-item>
-          </el-col>
-          <el-col :span="10">
-            <el-form-item label="个人简介 :" prop="profile">
-              <el-input type="textarea" v-model="personalInfo.profile"
-                placeholder="写点什么来介绍下自己吧~~" :disabled="disabled">
-              </el-input>
+              <el-input v-model="personalInfo.house" disabled></el-input>
             </el-form-item>
           </el-col>
         </el-row>
@@ -80,6 +49,10 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+import { getUsersAll, updateUser } from '../service/login'
+import { getParking } from '@/service/parking'
+import { getHouse } from '@/service/house'
 export default {
   data() {
     return {
@@ -87,55 +60,76 @@ export default {
       disabled: true,
       ifShow: false,
       personalInfo: {
-        account: '',
-        password: '',
-        nickName: '',
-        sex: '',
-        age: '',
-        phoneNumber: '12456',
-        parking: '暂无车位',
-        house: '',
-        profile: '',
-        // circleUrl: "https://cube.elemecdn.com/9/c2/f0ee8a3c7c9638a54940382568c9dpng.png"
-        // cricleUrl: '@/image/user/girl.jpg'
+        name: '',
+        sex: null,
+        age: null,
+        phoneNumber: '',
+        parking: '',
+        house: ''
       },
       personalInfoRules: {
-        nickName: [
-          { required: true, message: '姓名不能为空', trigger: 'blur'}
-        ],
-        sex: [
-          { required: true, message: '性别不能为空', trigger: 'change'}
-        ],
         age: [
-          { required: true, message: '年龄不能为空', trigger: 'blur'},
           { type: 'number', message: '年龄必须为数字值', trigger: 'blur' }
         ],
         phoneNumber: [
-          { required: true, message: '联系电话不能为空', trigger: 'blur'},
           { type: 'number', message: '电话必须为数字值', trigger: 'blur' }
-        ],
-        house: [
-          { type: 'array', required: true, message: '请选择隶属房屋', trigger: 'change' }
         ]
-      },
-      optionsHouse: [{
-        value: 'zhinan',
-        label: '指南',
-        children: [{
-          value: 'yizhi',
-          label: '一致'
-        }]
-      }, {
-        value: 'aa',
-        label: 'A栋',
-        children: [{
-          value: 'a1',
-          label: 'A1'
-        }]
-      }]
+      }
     }
   },
+  computed: {
+    ...mapState({
+      userId: state=>state.user.id
+    })
+  },
+  created() {
+    this._getUsersAll(this.userId, 1)
+    this._getParking(this.userId)
+    this._getHouse(this.userId)
+  },
   methods: {
+    _getUsersAll(id, limit) {
+      getUsersAll({id, limit})
+      .then(res => {
+        if (res.data.code === 200) {
+          const personalInfo = res.data.user.rows[0]
+          this.personalInfo.name = personalInfo.name
+          this.personalInfo.age = personalInfo.age
+          this.personalInfo.phoneNumber = parseInt(personalInfo.phoneNumber)
+          personalInfo.sex === 1 ? this.personalInfo.sex = '1' : this.personalInfo.sex = '2'
+        } else {
+          this.$message.error('获取信息失败')
+        }
+      })
+    },
+    _getParking(belongUser) {
+      getParking({belongUser})
+      .then(res => {
+        if (res.data.code === 200) {
+          let parking = res.data.parking.rows
+          parking = parking.map(item => {
+            return `${item.name}   `
+          })
+          this.personalInfo.parking = parking.join('')
+        } else {
+          this.$message.error('获取车位信息失败')
+        }
+      })
+    },
+    _getHouse(belongUser) {
+      getHouse({belongUser})
+      .then(res => {
+        if (res.data.code === 200) {
+          let house = res.data.house.rows
+          house = house.map(item => {
+            return `${item.belongBuilding} / ${item.name}   `
+          })
+          this.personalInfo.house = house.join('')
+        } else {
+          this.$message.error('获取房屋信息失败')
+        }
+      })
+    },
     edit() {
       this.disabled = false
       this.ifShow = true
@@ -145,7 +139,20 @@ export default {
         if (valid) {
           this.disabled = true
           this.ifShow = false
-          console.log('成功')
+          updateUser({
+            name: this.personalInfo.name,
+            sex: this.personalInfo.sex,
+            age: this.personalInfo.age,
+            phoneNumber: this.personalInfo.phoneNumber
+          }, this.userId)
+          .then(res => {
+            if (res.data.code === 200) {
+              this.$message.success('修改成功')
+              this._getUsersAll(this.userId, 1)
+            } else {
+              this.$message.error('修改失败')
+            }
+          })
         } else {
           return false
         }
@@ -157,19 +164,13 @@ export default {
 
 <style lang="scss" scoped>
   .personal {
+    .el-form {
+      margin-top: 20px;
+    }
     .el-input.is-disabled /deep/ .el-input__inner,
     .el-textarea.is-disabled /deep/ .el-textarea__inner {
       background-color: white;
       color: rgb(96, 98, 102);
     }
-    .avatar {
-      margin-bottom: 20px;
-      img {
-        width: 100px;
-        height: 100px;
-        // display: block;
-        // margin: 0 auto;
-      }
-    } 
   }
 </style>

@@ -6,7 +6,7 @@ const Sequelize = require('sequelize')
 //     }
 // }
 
-module.exports = (sequelize, DateTypes) => {
+module.exports = (sequelize, DataTypes) => {
   class Model extends Sequelize.Model {
     compareInfo(password, identity) {
       // return this.password === MD5(password).toString()

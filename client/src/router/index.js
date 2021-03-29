@@ -37,7 +37,7 @@ export const routes = [
     component: () => import('../views/layout/index.vue'),
     children: [{
       path: '/personal',
-      name: '个人中心',
+      name: 'personal',
       component: () => import('views/personal.vue')
     }]
   }, 
@@ -48,7 +48,7 @@ const routeInfoOwner = [{
   name: 'Layout',
   component: () => import('views/layout/index.vue'),
   children: [{
-    path: '/home',
+    path: '/owner/home',
     name: '首页',
     component: () => import('views/owner/home.vue')
   }, {
@@ -56,14 +56,16 @@ const routeInfoOwner = [{
       name: '查看公告',
       component: () => import('views/owner/bulletin')
   }, {
-    path: '/complaint',
-    name: '我的投诉',
-    component: () => import('views/owner/complaint')
-  }, {
     path: '/service',
-    name: '我的报修',
+    name: '我的投诉/报修',
     component: () => import('views/owner/service')
-  }, {
+  }, 
+  // {
+  //   path: '/service',
+  //   name: '我的报修',
+  //   component: () => import('views/owner/service')
+  // }, 
+  {
     path: '/payment',
     name: '我的账单',
     component: () => import('views/owner/payment')
@@ -75,7 +77,7 @@ const routeInfoAdmin =[{
   name: 'Layout',
   component: () => import('views/layout/index.vue') ,
   children: [{
-    path: '/home',
+    path: '/admin/home',
     name: '首页',
     component: () => import('views/admin/home/home.vue')
   }, {
@@ -100,9 +102,9 @@ const routeInfoAdmin =[{
         component: () => import('views/admin/community/bulletin.vue') 
   }, {
         path: '/communitySys/service',
-        name: '维修管理',
+        name: '维修/投诉管理',
         component: () => import('views/admin/community/service.vue'),
-        alias: '/communitySys/complaint'
+        // alias: '/communitySys/complaint'
   },
   // {
   //       path: '/communitySys/complaint',

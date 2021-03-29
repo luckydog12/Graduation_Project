@@ -9,14 +9,14 @@
         </el-form-item>
         <el-form-item label="状态: ">
           <el-select v-model="searchForm.state" clearable placeholder="请选择车位状态">
-            <el-option label="未卖出" value="weimaichu"></el-option>
-            <el-option label="已卖出" value="yimaichu"></el-option>
+            <el-option label="未卖出" value="2"></el-option>
+            <el-option label="已卖出" value="1"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="类型: ">
           <el-select v-model="searchForm.type" clearable placeholder="请选择车位类型">
-            <el-option label="地上" value="dishang"></el-option>
-            <el-option label="地下" value="dixia"></el-option>
+            <el-option label="地上" value="1"></el-option>
+            <el-option label="地下" value="2"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -27,9 +27,9 @@
     </div>
     <el-table :data="parkingData" height="400" border stripe style="width: 80%">
       <el-table-column type="index" width="50"></el-table-column>
-      <el-table-column prop="parkingName" label="车位名"></el-table-column>
-      <el-table-column prop="parkingState" label="车位状态"></el-table-column>
-      <el-table-column prop="parkingType" label="车位类型"></el-table-column>
+      <el-table-column prop="name" label="车位名"></el-table-column>
+      <el-table-column prop="state" label="车位状态"></el-table-column>
+      <el-table-column prop="type" label="车位类型"></el-table-column>
       <el-table-column prop="hasUser" label="所属业主"></el-table-column>
       <el-table-column fixed="right" label="操作" width="120">
         <template slot-scope="scope">   
@@ -44,33 +44,33 @@
       <el-form :model="parkingFormDialog" :label-position="labelPosition" ref="parkingFormDialog">
         <el-row>
           <el-col :span="20">
-            <el-form-item label="车位名:" :label-width="formLabelWidth" prop="parkingName"
+            <el-form-item label="车位名:" :label-width="formLabelWidth" prop="name"
               :rules="[{ required: true, message: '车位名不能为空', trigger: 'blur' }]">
-              <el-input v-model="parkingFormDialog.parkingName" autocomplete="off" placeholder="请输入车位名"></el-input>
+              <el-input v-model="parkingFormDialog.name" autocomplete="off" placeholder="请输入车位名"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="20">
-            <el-form-item label="车位状态:" :label-width="formLabelWidth" prop="parkingState"
-              :rules="[{ required: true, message: '请选择车位状态', trigger: 'change' }]">
-              <el-select v-model="parkingFormDialog.parkingState" placeholder="请选择车位状态">
-                <el-option label="未卖出" value="weimaichu"></el-option>
-                <el-option label="已卖出" value="yimaichu"></el-option>
+            <el-form-item label="车位状态:" :label-width="formLabelWidth" prop="state"
+              :rules="[{ required: true, message: '请选择车位状态', trigger: 'visible-change' }]">
+              <el-select v-model="parkingFormDialog.state" placeholder="请选择车位状态">
+                <el-option label="未卖出" value="2"></el-option>
+                <el-option label="已卖出" value="1"></el-option>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="20">
-            <el-form-item label="车位类型:" :label-width="formLabelWidth" prop="parkingType"
-              :rules="[{ required: true, message: '请选择车位类型', trigger: 'change' }]">
-              <el-select v-model="parkingFormDialog.parkingType" placeholder="请选择车位类型">
-                <el-option label="地上" value="dishang"></el-option>
-                <el-option label="地下" value="dixia"></el-option>
+            <el-form-item label="车位类型:" :label-width="formLabelWidth" prop="type"
+              :rules="[{ required: true, message: '请选择车位类型', trigger: 'visible-change' }]">
+              <el-select v-model="parkingFormDialog.type" placeholder="请选择车位类型">
+                <el-option label="地上" value="1"></el-option>
+                <el-option label="地下" value="2"></el-option>
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="20">
-            <el-form-item label="所属业主:" :label-width="formLabelWidth" prop="hasUser"
+          <el-col :span="20" v-if="hasUserShow">
+            <el-form-item label="所属业主:" :label-width="formLabelWidth" prop="belongUser"
               :rules="[{ required: true, message: '请选择所属业主', trigger: 'change' }]">
-              <el-autocomplete class="inline-input" v-model="parkingFormDialog.hasUser" placeholder="请输入业主名"
+              <el-autocomplete class="inline-input" v-model="parkingFormDialog.belongUser" placeholder="请输入业主名"
                 :fetch-suggestions="querySearch" @select="handleSelect">
               </el-autocomplete>
             </el-form-item>
@@ -83,9 +83,9 @@
       </div>
     </el-dialog>
     <pagination
-      :currentPage="1"
-      :pageSize="2"
-      :total="40"
+      :currentPage="page"
+      :pageSize="limit"
+      :total="total"
       @sizeChange="sizeChange"
       @currentChange="currentChange">
     </pagination>
@@ -93,13 +93,20 @@
 </template>
 
 <script>
+import { getUserAccount, getUsersAll } from "@/service/login"
+import { getParking, addParking, deleteParking, updateParking } from '@/service/parking.js'
 export default {
   data() {
     return {
+      page: 1,
+      limit: 10,
+      total: 0,
       handleLogo: 1,
-      allOwner: [ {value: 'luckydog'}, {value: 'luckydog2'} ],
-      allParking: [ {value: 'A'}, {value: 'B'} ],
+      allOwner: [],
+      usersAll: [],
+      allParking: [],
       handleAddDialog: false,
+      hasUserShow: false,
       formLabelWidth: '110px',
       labelPosition: 'left',
       searchForm: {
@@ -107,31 +114,85 @@ export default {
         state: '',
         type: ''
       },
-      parkingData: [{
-        parkingName: '车位1',
-        parkingState: '未卖出',
-        parkingType: '地上',
-        hasUser: '暂无'
-      }, {
-        parkingName: '车位2',
-        parkingState: '已卖出',
-        parkingType: '地上',
-        hasUser: 'luckydog'
-      }],
+      parkingData: [],
       parkingFormDialog: {
-       parkingName: '',
-       parkingType: '',
-       parkingState: '',
-       hasUser: '暂无'
+       name: '',
+       type: '',
+       state: '',
+       belongUser: ''
       },
     }
   },
+  created() {
+    this._getParking('', '', '', 1, 9999)
+    getUserAccount()
+    .then(res => {
+        if (res.data.code ===200) {
+          this.allOwner = res.data.userAccount
+        } else {
+          this.$message.error('获取用户账号出错')
+        }
+      })
+    getUsersAll({limit: 9999})
+    .then(res => {
+      if (res.data.code === 200) {
+        this.usersAll = res.data.user.rows
+      } else {
+        this.$message.error('获取用户信息错误')
+      }
+    })
+  },
+  //监听对象 watch需要配合computed
+  computed: {
+    parkingState() {
+      return this.parkingFormDialog.state
+    }
+  },
+  watch: {
+    parkingState(val) {
+      val === '1' ? this.hasUserShow = true : this.hasUserShow = false
+    }
+  },
   methods: {
+    _getParking(name, state, type, page, limit) {
+      getParking({ name, state, type, page, limit })
+      .then(res => {
+        if (res.data.code === 200) {
+          const parkingData = res.data.parking.rows
+          this.parkingData = parkingData.map(item => {
+            if (item.state === 1) {
+              item.state = '已卖出'
+              item.hasUser = item['User.account']
+            } else {
+              item.state = '未卖出'
+              item.hasUser = '-'
+            }
+            item.type === 1 ? item.type = '地上' : item.type = '地下'
+            return item
+          })
+          this.total = res.data.parking.count
+        } else {
+          this.$message.error('获取数据出错')
+        }
+      })
+    },
     querySearchParking(queryString, cb) {
-      let allParking = this.allParking
-      let results = queryString ? allParking.filter(this.createFilterParking(queryString)) : allParking
-      // 调用 callback 返回建议列表的数据
-      cb(results)
+      getParking({name: '', state: '', type: '', page: 1, limit: 9999})
+      .then(res => {
+        if (res.data.code === 200) {
+          this.allParking = []
+          let parkingData = res.data.parking.rows
+          parkingData.map(item => {
+            this.allParking.push({value: item.name})
+          })
+          let allParking = this.allParking
+          let results = queryString ? allParking.filter(this.createFilterParking(queryString)) : allParking
+          // 调用 callback 返回建议列表的数据
+          cb(results)
+        } else {
+          this.$message.error('获取车位名出错')
+        }
+      })
     },
     createFilterParking(queryString) {
       return (parking) => {
@@ -142,46 +203,104 @@ export default {
       console.log(item)
     },
     handleSearch() {
-
+      this.page = 1
+      this._getParking(this.searchForm.name, this.searchForm.state, 
+        this.searchForm.type, this.page, this.limit)
     },
     handleAddParking() {
       this.handleAddDialog = true
       this.handleLogo = 2
+      this.parkingFormDialog = {
+       name: '',
+       type: '',
+       state: '',
+       belongUser: ''
+      }
     },
     confirm(formName) {
-      console.log('confirm')
       this.$refs[formName].validate( valid => {
         if (valid) {
+          let id = this.usersAll.map(item => {
+            if (item.account == this.parkingFormDialog.belongUser)
+            return item.id
+          })
+          id = id.filter(item => item)
+          this.parkingFormDialog.belongUser = id[0]
           if (this.handleLogo === 1) {
-            console.log('编辑操作')
+            //编辑操作
+            const parkingId = this.parkingFormDialog.id
+            updateParking({
+              name: this.parkingFormDialog.name,
+              state: this.parkingFormDialog.state,
+              type: this.parkingFormDialog.type,
+              belongUser: this.parkingFormDialog.state == '1' ? this.parkingFormDialog.belongUser : null
+            }, parkingId)
+            .then(res => {
+              if (res.data.code === 200) {
+                this._getParking(this.searchForm.name, this.searchForm.state, 
+                  this.searchForm.type, this.page, this.limit)
+                this.$message({
+                  message: '车位信息更新成功',
+                  type: 'success'
+                })
+              } else {
+                this.$message.error('车位信息更新失败')
+              }
+            })
           } else {
-            console.log('添加操作')
+            //添加操作
+            addParking(this.parkingFormDialog)
+            .then(res => {
+              if (res.data.code === 200) {
+                this.$message({
+                  message: '车位信息添加成功',
+                  type: 'success'
+                })
+                this._getParking(this.searchForm.name, this.searchForm.state, 
+                  this.searchForm.type, this.page, this.limit)
+              } else {
+                this.$message.error('车位信息添加出错')
+              }
+            })
           }
           this.handleAddDialog = false
           this.parkingFormDialog = {
-            parkingName: '',
-            parkingState: '',
-            parkingType: '',
-            hasUser: '暂无'
+            name: '',
+            state: '',
+            type: '',
+            belongUser: ''
           }
-          console.log('11')
         } else {
           return false
         }
       })
     },
     handleEdit(index, data) {
-      console.log(index, data)
       this.handleLogo = 1
       this.handleAddDialog = true
       Object.assign(this.parkingFormDialog, data)
-      this.parkingFormDialog.belongTo = this.handleCascader(data.belongTo)
-      this.parkingFormDialog.houseArea = this.handleHouseArea(data.houseArea)
-      console.log('**',this.parkingFormDialog)
-      //记得编辑后把表单清空，现在懒得写。。。。  
+      this.parkingFormDialog.state === '未卖出' ? this.parkingFormDialog.state = '2' : this.parkingFormDialog.state = '1'
+      this.parkingFormDialog.type === '地下' ? this.parkingFormDialog.type = '2' : this.parkingFormDialog.type = '1' 
+      this.parkingFormDialog.belongUser = this.parkingFormDialog['User.account']
     },
     handleDelete(index, data) {
-      console.log(index, data)
+      const id = data.id
+      deleteParking({id})
+      .then(res => {
+        if (res.data.code === 200) {
+          if (this.parkingData.length === 1 && this.page !== 1) {
+            this.page -=1
+          }
+          this._getParking(this.searchForm.name, this.searchForm.state, 
+                  this.searchForm.type, this.page, this.limit)
+          this.$message({
+            message: '删除成功',
+            type: 'success'
+          })
+        } else {
+          this.$message.error('删除失败')
+        }
+      })
     },
     querySearch(queryString, cb) {
       let allOwner = this.allOwner
@@ -198,23 +317,14 @@ export default {
       console.log(item)
     },
     sizeChange(val) {
-      console.log('dad',val)
+      this.limit = val
+      this._getParking(this.searchForm.name, this.searchForm.state, 
+        this.searchForm.type, this.page, this.limit)
     },
     currentChange(val) {
-      console.log('dad', val)
-    },
-    // A栋 / A1 => ['A栋', 'A1']
-    handleCascader(item) {
-      let arr = item.split('/')
-      arr = arr.map( val => {
-        return val.trim()
-      })
-      return arr
-    },
-    handleHouseArea(item) {
-      let length = item.length
-      item = item.slice(-length, -1)
-      return parseInt(item)
+      this.page = val
+      this._getParking(this.searchForm.name, this.searchForm.state, 
+        this.searchForm.type, this.page, this.limit)
     }
   },
 }

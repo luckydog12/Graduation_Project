@@ -5,8 +5,11 @@ import store from './store'
 import './plugins/element.js'
 import 'normalize.css'
 import './components'
+import './icons'
+import * as echarts from 'echarts'
 
 Vue.config.productionTip = false
+Vue.prototype.$echarts = echarts
 
 new Vue({
   router,

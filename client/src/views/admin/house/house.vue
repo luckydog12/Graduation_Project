@@ -1,9 +1,9 @@
 <template>
   <div class="house">
     <div class="search">
-      <el-select v-model="searchHouse" placeholder="请选择房屋状态" class="state">
-        <el-option label="未入住" value="empty"></el-option>
-        <el-option label="已入住" value="full"></el-option>
+      <el-select v-model="searchHouse" placeholder="请选择房屋状态" class="state" clearable>
+        <el-option label="未卖出" value="2"></el-option>
+        <el-option label="已卖出" value="1"></el-option>
       </el-select>
       <el-button type="primary" @click="handleSearch">搜索</el-button>
       <el-button type="primary" @click="handleAddHouse">添加</el-button>
@@ -13,15 +13,15 @@
       <el-table-column prop="name" label="房屋名"></el-table-column>
       <el-table-column prop="area" label="房屋面积"></el-table-column>
       <el-table-column prop="state" label="房屋状态">
-        <template slot-scope="scope">
+        <!-- <template slot-scope="scope">
           {{scope.row.state === 1 ? "已卖出" : "未卖出"}}
-        </template>
+        </template> -->
       </el-table-column>
       <el-table-column prop="belongBuilding" label="隶属楼栋单元"></el-table-column>
       <el-table-column prop="hasUser" label="所属业主">
-        <template slot-scope="scope">
-          {{scope.row.state === 1 ? scope.row.User.account : '-'}}
-        </template>
+        <!-- <template slot-scope="scope">
+          {{scope.row.state === 1 ? scope.row['User.account'] : '-'}}
+        </template> -->
       </el-table-column>
       <el-table-column fixed="right" label="操作" width="120">
         <template slot-scope="scope">   
@@ -83,9 +83,9 @@
       </div>
     </el-dialog>
     <pagination
-      :currentPage="1"
-      :pageSize="2"
-      :total="40"
+      :currentPage="page"
+      :pageSize="limit"
+      :total="total"
       @sizeChange="sizeChange"
       @currentChange="currentChange">
     </pagination>
@@ -95,10 +95,13 @@
 <script>
 import { getBuilding } from "@/service/building"
 import { getUserAccount, getUsersAll } from "@/service/login"
-import { getHouseAll, deleteHouse, addHouse,  } from "@/service/house"
+import { deleteHouse, addHouse, getHouse, updateHouse } from "@/service/house"
 export default {
   data() {
     return {
+      page: 1,
+      limit: 10,
+      total: 0,
       handleLogo: 1,
       searchHouse: '',
       owner: '',
@@ -135,7 +138,6 @@ export default {
       } else {
         this.$message.error('获取用户信息错误')
       }
-      console.log('allusers',this.usersAll)
     })
     getBuilding({name: '', page: 1, limit: 9999})
     .then(res => {
@@ -164,7 +166,7 @@ export default {
         this.$message.error('数据查询失败')
       }
     })
-    this._getHouseAll()
+    this._getHouse('', 1, 9999)
   },
   //监听对象 watch需要配合computed
   computed: {
@@ -178,76 +180,121 @@ export default {
     }
   },
   methods: {
-    _getHouseAll() {
-      getHouseAll()
+    _getHouse(state, page, limit) {
+      getHouse({state, page, limit})
       .then(res => {
         if (res.data.code === 200) {
-          console.log(res.data)
-          this.houseData = res.data.house
+          const houseData = res.data.house.rows
+          this.houseData = houseData.map(item => {
+            if (item.state === 1) {
+              item.state = '已卖出'
+              item.hasUser = item['User.account']
+            } else {
+              item.state = '未卖出'
+              item.hasUser = '-'
+            }
+            return item
+          })
+          this.total = res.data.house.count
         } else {
-          this.$message.error('获取数据出错')
+          this.$message.error('~获取数据出错')
         }
       })
     },
     handleSearch() {
-
+      this.page = 1
+      this._getHouse(this.searchHouse, this.page, this.limit)
     },
     handleAddHouse() {
+      this.hasUserShow = false
+      this.houseFormDialog = {
+       name: '',
+       area: '',
+       state: '',
+       belongBuilding: '',
+       belongUser: null
+      },
       this.handleAddDialog = true
       this.handleLogo = 2
     },
     confirm(formName) {
       this.$refs[formName].validate( valid => {
         if (valid) {
-          console.log(this.houseFormDialog)
           this.houseFormDialog.belongBuilding =`${this.houseFormDialog.belongBuilding[0]} / ${this.houseFormDialog.belongBuilding[1]}`
-          console.log('23232',this.houseFormDialog)
-          const id = this.usersAll.map(item => {
-            if (item.account === this.houseFormDialog.belongUser)
+          this.houseFormDialog.area = `${this.houseFormDialog.area}㎡`
+          let id = this.usersAll.map(item => {
+            if (item.account == this.houseFormDialog.belongUser)
             return item.id
           })
+          id = id.filter(item => item)
           if (this.handleLogo === 1) {
-            console.log('编辑操作')
+            //编辑操作
+            const houseId = this.houseFormDialog.id
+            this.houseFormDialog.belongUser = id[0]
+            updateHouse({
+              name: this.houseFormDialog.name,
+              area: this.houseFormDialog.area,
+              belongBuilding: this.houseFormDialog.belongBuilding,
+              state: this.houseFormDialog.state,
+              belongUser: this.houseFormDialog.state == '1' ? this.houseFormDialog.belongUser : null
+            }, houseId)
+            .then(res => {
+              if (res.data.code === 200) {
+                this._getHouse(this.searchHouse, this.page, this.limit)
+                this.$message({
+                  message: '房屋信息修改成功',
+                  type: 'success'
+                }) 
+              } else {
+                this.$message.error('房屋信息修改失败，请重试')
+              }
+            })
           } else {
-            console.log('添加操作')
             this.houseFormDialog.belongUser = id[0]
             addHouse(this.houseFormDialog)
             .then(res => {
-              console.log(res)
-              getHouseAll()
+              if (res.data.code === 200) {
+                this._getHouse(this.searchHouse, this.page, this.limit)
+                this.$message({
+                  message: '添加成功',
+                  type: 'success'
+                })
+              } else {
+                this.$message.error('添加失败，请重试')
+              }
             })
           }
           this.handleAddDialog = false
           this.houseFormDialog = {
-            houseName: '',
-            houseArea: '',
-            houseState: '',
-            belongTo: '',
-            hasUser: ''
+            name: '',
+            area: '',
+            state: '',
+            belongBuilding: '',
+            belongUser: null
           }
-          console.log('11')
         } else {
           return false
         }
       })
     },
     handleEdit(index, data) {
-      console.log(index, data)
       this.handleLogo = 1
       this.handleAddDialog = true
       Object.assign(this.houseFormDialog, data)
-      this.houseFormDialog.belongTo = this.handleCascader(data.belongTo)
-      this.houseFormDialog.houseArea = this.handleHouseArea(data.houseArea)
-      console.log('**',this.houseFormDialog)
-      //记得编辑后把表单清空，现在懒得写。。。。  
+      this.houseFormDialog.state === '已卖出' ? this.houseFormDialog.state = '1' : this.houseFormDialog.state = '2'
+      this.houseFormDialog.belongBuilding = this.handleCascader(data.belongBuilding)
+      this.houseFormDialog.area = this.handleHouseArea(data.area)
+      this.houseFormDialog.belongUser = this.houseFormDialog['User.account']
     },
     handleDelete(index, data) {
       const id = data.id
       deleteHouse({id})
       .then(res => {
-        console.log(res)
         if (res.data.code === 200) {
-          this._getHouseAll()
+          if (this.houseData.length === 1) {
+            this.page -=1
+          }
+          this._getHouse(this.searchHouse, this.page, this.limit)
           this.$message({
             message: '删除成功',
             type: 'success'
@@ -272,10 +319,12 @@ export default {
       console.log(item)
     },
     sizeChange(val) {
-      console.log('dad',val)
+      this.limit = val
+      this._getHouse(this.searchHouse, this.page, this.limit)
     },
     currentChange(val) {
-      console.log('dad', val)
+      this.page = val 
+      this._getHouse(this.searchHouse, this.page, this.limit)
     },
     // A栋 / A1 => ['A栋', 'A1']
     handleCascader(item) {
