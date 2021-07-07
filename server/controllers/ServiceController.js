@@ -77,7 +77,7 @@ module.exports = {
       }
       if (createdAt) {
         createdAt[1] = new Date(Date.parse(createdAt[1]))
-        createdAt[1].setTime(createdAt[1].getTime() + 3600*1000*24)
+        createdAt[1].setTime(createdAt[1].getTime() + 3600*1000*16)
         whereOpt['createdAt'] = {
           [Op.lte]: createdAt[1],
           [Op.gte]: createdAt[0]

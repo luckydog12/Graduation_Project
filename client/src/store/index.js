@@ -8,7 +8,9 @@ const store = new Vuex.Store({
     state: {
         token: '',
         user: null,
-        isUserLogin: false
+        isUserLogin: false,
+        outTradeNo: null,
+        payId: null
     },
     mutations: {
         setToken(state, token) {
@@ -21,6 +23,12 @@ const store = new Vuex.Store({
         },
         setUser(state, user) {
             state.user = user
+        },
+        setOutTradeNo(state, outTradeNo) {
+          state.outTradeNo = outTradeNo
+        },
+        setPayId(state, payId) {
+          state.payId = payId
         }
     },
     actions: {
@@ -29,6 +37,12 @@ const store = new Vuex.Store({
         },
         setUser({commit}, user) {
             commit('setUser', user)
+        },
+        setOutTradeNo({commit}, outTradeNo) {
+          commit('setOutTradeNo', outTradeNo)
+        },
+        setPayId({commit}, payId) {
+          commit('setPayId', payId)
         }
     },
     plugins: [createPersistedState()],

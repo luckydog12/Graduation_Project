@@ -21,7 +21,7 @@
     </el-dialog>
     <el-table :data="serviceForm" height="400" border stripe style="width: 90%">
       <el-table-column type="index" width="50"></el-table-column>
-      <el-table-column prop="content" label="投诉内容" show-overflow-tooltip></el-table-column>
+      <el-table-column prop="content" label="投诉/报修内容" show-overflow-tooltip></el-table-column>
       <el-table-column prop="created_at" label="发布时间"></el-table-column>
       <el-table-column prop="state" label="处理状态"></el-table-column>
       <el-table-column prop="handled_at" label="处理时间"></el-table-column>

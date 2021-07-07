@@ -277,11 +277,13 @@ module.exports = {
                 path: '/layout',
                 name: 'Layout',
                 component: 'layout/index',
-                children: [{
-                  path: '/owner/home',
-                  name: '首页',
-                  component: "owner/home"
-                }, {
+                children: [
+                  // {
+                  // path: '/owner/home',
+                  // name: '首页',
+                  // component: "owner/home"
+                  // }, 
+                {
                   path: '/bulletin',
                   name: '查看公告',
                   component: "owner/bulletin"

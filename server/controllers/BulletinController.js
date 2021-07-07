@@ -77,7 +77,7 @@ module.exports = {
       }
       if (publishAt) {
         publishAt[1] = new Date(Date.parse(publishAt[1]))
-        publishAt[1].setTime(publishAt[1].getTime() + 3600*1000*24)
+        publishAt[1].setTime(publishAt[1].getTime() + 3600*1000*16)
         whereOpt['publishAt'] = {
           [Op.lte]: publishAt[1],
           [Op.gte]: publishAt[0]

@@ -9,18 +9,17 @@
       <el-table-column prop="pay_date" label="缴费日期"></el-table-column>
       <el-table-column fixed="right" label="操作" width="120">
         <template slot-scope="scope">
-          <el-button type="text" @click="handlePay(scope.$index, scope.row)">支付</el-button>
+          <el-button type="text" :disabled="scope.row.state=='已缴费'" @click="handlePay(scope.$index, scope.row)">支付</el-button>
         </template>
       </el-table-column>
     </el-table>
-    <div class="qrcode" ref="qrCodeUrl"></div>
   </div>
 </template>
 
 <script>
-import QRCode from 'qrcodejs2'
-import { getPayManage } from '@/service/payManage'
-import { mapState } from 'vuex'
+import { getPayManage, updatePayManage } from '@/service/payManage'
+import { alipay, payStatus } from '@/service/alipay'
+import { mapState, mapActions } from 'vuex'
 export default {
   data() {
     return {
@@ -29,12 +28,42 @@ export default {
   },
   computed: {
     ...mapState({
-      userId: state=>state.user.id
+      userId: state=>state.user.id,
+      outTradeNo: state=>state.outTradeNo,
+      payId: state=>state.payId
     })
   },
   created() {
-    getPayManage({belongUser: this.userId, limit: 9999})
-    .then(res => {
+    if (this.outTradeNo && this.payId) {
+      payStatus({outTradeNo: this.outTradeNo})
+      .then(res => {
+        console.log('paystatus', res)
+        if (res.data.code === 200 && res.data.result.status === 2) {
+          this.$message.success("交易支付成功")
+          updatePayManage({
+            state: 1,
+            payDate: (new Date()).toLocaleDateString()
+          }, this.payId)
+          .then(res => {
+            if (res.data.code === 200) {
+              this.setPayId(null)
+              this.setOutTradeNo(null)
+              this._getPayManage()
+            }
+          })
+        }
+      })
+    }
+    this._getPayManage()
+  },
+  methods: {
+    ...mapActions([
+        'setPayId',
+        'setOutTradeNo'
+      ]),
+    _getPayManage() {
+      getPayManage({belongUser: this.userId, limit: 9999})
+      .then(res => {
       console.log(res.data.payManage.rows)
       if (res.data.code === 200) {
         let payManage = res.data.payManage.rows
@@ -44,6 +73,9 @@ export default {
           item.dead_at = (item.deadLine).split('T')[0]
           if (item.state === 1) {
             item.state = '已缴费'
+            let date = item.payDate
+            date = new Date(Date.parse(date))
+            item.pay_date = date.toLocaleDateString()
           } else {
             item.state = '未缴费'
             item.pay_date = '-'
@@ -54,26 +86,36 @@ export default {
         this.$message.error('获取出错')
       }
     })
-  },
-  methods: {
+    },
+    orderCode() {
+      let orderCode = ''
+      for (var i = 0; i < 6; i++) //6位随机数，用以加在时间戳后面。
+      {
+        orderCode += Math.floor(Math.random() * 10)
+      }
+      orderCode = new Date().getTime() + orderCode  //时间戳，用来生成订单号。
+      console.log(orderCode)
+      return orderCode
+    },
     handlePay(index, item) {
       console.log(index, item)
-      
-    },
-    creatQrCode() {
-      return  new QRCode(this.$refs.qrCodeUrl, {
-        text: 'https://luckydog314.ltd/', // 需要转换为二维码的内容
-        width: 100,
-        height: 100,
-        colorDark: '#000000',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.H //容错等级
+      const outTradeNo = this.orderCode()
+      const payId = item.id
+      this.$store.dispatch('setOutTradeNo', outTradeNo)
+      this.$store.dispatch('setPayId', payId)
+      alipay({
+        outTradeNo,
+        totalAmount: item.value,
+        subject: item.payType
+      }).then(res => {
+        if(res.data.status === 200) {
+          window.location.href = res.data.result
+        } else {
+          this.$message.error("支付出错，请重试")
+        }
       })
     },
-  },
-  mounted() {
-    this.creatQrCode()
-  },
+  }
 }
 </script>
 

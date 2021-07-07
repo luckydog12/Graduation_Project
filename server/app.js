@@ -14,6 +14,7 @@ const payTypeRouter = require('./routes/payType')
 const payManageRouter = require('./routes/payManage')
 const bulletinRouter = require('./routes/bulletin')
 const serviceRouter = require('./routes/service')
+const alipayRouter = require('./routes/alipay')
 
 const app = express()
 
@@ -37,6 +38,7 @@ app.use('/payType', payTypeRouter)
 app.use('/payManage', payManageRouter)
 app.use('/bulletin', bulletinRouter)
 app.use('/service', serviceRouter)
+app.use('/alipay', alipayRouter)
 sequelize.sync().then(() => {
   console.log('Connection has been established successfully.')
 }).catch(err => {

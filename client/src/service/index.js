@@ -2,7 +2,7 @@ import axios from 'axios'
 import store from '../store'
 
 const req = axios.create({
-    // baseURL: 'http://127.0.0.1:8081/',
+    // baseURL: '',
     // timeout: 10000
 })
 //拦截器

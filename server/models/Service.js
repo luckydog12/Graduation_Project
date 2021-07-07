@@ -11,10 +11,10 @@ module.exports = (sequelize, DataTypes) => {
       type: Sequelize.DataTypes.INTEGER,
       allowNull: true
     },
-    img: {
-      type: Sequelize.DataTypes.STRING,
-      allowNull: true
-    },
+    // img: {
+    //   type: Sequelize.DataTypes.STRING,
+    //   allowNull: true
+    // },
     state: {
       type: Sequelize.DataTypes.INTEGER, //1已处理 2未处理
       allowNull: false,

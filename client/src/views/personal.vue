@@ -32,12 +32,12 @@
             </el-form-item>
           </el-col>
           <el-col :span="10">
-            <el-form-item label="隶属车位 :" prop="parking">
+            <el-form-item label="所有车位 :" prop="parking">
               <el-input v-model="personalInfo.parking" disabled></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="10">
-            <el-form-item label="隶属房屋 :" prop="house">
+            <el-form-item label="所有房屋 :" prop="house">
               <el-input v-model="personalInfo.house" disabled></el-input>
             </el-form-item>
           </el-col>

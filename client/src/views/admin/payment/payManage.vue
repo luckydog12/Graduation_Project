@@ -233,6 +233,9 @@ export default {
             item.deadLine = item.deadLine.split('T')[0]
             if (item.state === 1) {
               item.state = '已缴费'
+              let date = item.payDate
+              date = new Date(Date.parse(date))
+              item.payDate = date.toLocaleDateString()
             } else {
               item.state = '未缴费'
               item.payDate = '-'
@@ -293,9 +296,7 @@ export default {
             })
           }
           this.handlePayTypeDialog = false
-          this.payTypeDialog = {
-            name: ''
-          }
+          this.$refs[formName].resetFields()
         } else {
           return false
         }
